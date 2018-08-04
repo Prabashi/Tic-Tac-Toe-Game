@@ -84,6 +84,9 @@ class TicTacToe implements ActionListener {
 
         jFrame.add(jPanelHome);
         jFrame.setSize(300, 300);
+//        jFrame.setMinimumSize(new Dimension(300, 300)); //set minimum size
+        jFrame.setResizable(false); //to restrict resizing
+        jFrame.setLocationRelativeTo(null); // to center the Jframe in the screen
         jFrame.setVisible(true);
     }
 
