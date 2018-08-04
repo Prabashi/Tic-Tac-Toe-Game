@@ -14,6 +14,11 @@ class TicTacToe implements ActionListener {
     private JPanel jPanelGameBoard;
     private JButton onePlayer;
     private JButton twoPlayer;
+    private JPanel optionsPanel;
+
+    private JButton homeBtn;
+    private JButton resetBtn;
+    private JButton switchFirstMove;
 
     private JButton[] btn = new JButton[9]; //button array for 9 slots
     private boolean[] marked = new boolean[9]; //to keep track if a slot is marked
@@ -22,7 +27,10 @@ class TicTacToe implements ActionListener {
     private Random rand = new Random();
     private boolean isOnePlayerGame; //true for One Player game
     private boolean isPlayer1Move; // true if the move is Player 1's
-    private boolean isFirstMovePlayer1 = true; // used temporary, to store whose is 1st move
+    private boolean isFirstMovePlayer1 = true; // to store whose is 1st move
+
+    private boolean isWon = false; // true if won
+    private int btnIndex; // button index in button array
 
 
     TicTacToe() {
@@ -55,12 +63,24 @@ class TicTacToe implements ActionListener {
             marked[i] = false;
         }
 
+        optionsPanel = new JPanel();
+        homeBtn = new JButton("Home");
+        resetBtn = new JButton("Reset");
+        switchFirstMove = new JButton("Switch Sides");
+        optionsPanel.add(homeBtn);
+        optionsPanel.add(resetBtn);
+        optionsPanel.add(switchFirstMove);
+
         jPanelHome.setBackground(Color.gray);
 
         jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         onePlayer.addActionListener(this);
         twoPlayer.addActionListener(this);
+
+        homeBtn.addActionListener(this);
+        resetBtn.addActionListener(this);
+        switchFirstMove.addActionListener(this);
 
         jFrame.add(jPanelHome);
         jFrame.setSize(300, 300);
@@ -90,6 +110,33 @@ class TicTacToe implements ActionListener {
         }
     }
 
+    // computer's turn
+    private void comMove(){
+        if (!isPlayer1Move && isOnePlayerGame) {
+            do {
+                btnIndex = rand.nextInt(9);
+            } while (marked[btnIndex]);
+
+            markMoveOnBoard(btnIndex, "X");
+
+            //check if the computer won
+            isWon = ifPlayerWon("X");
+
+            if (isWon) {
+                //pop-up, Computer won
+                JOptionPane.showMessageDialog(jFrame, "Computer won!");
+                resetBoard();
+            } else if (move == 9) {
+                //end of the game; draw
+                JOptionPane.showMessageDialog(jFrame, "Draw!");
+                resetBoard();
+            } else {
+                isPlayer1Move = true;
+            }
+        }
+
+    }
+
     private void resetBoard() {
         move = 0;
         isPlayer1Move = isFirstMovePlayer1;
@@ -98,9 +145,18 @@ class TicTacToe implements ActionListener {
             btn[i].setText("");
             marked[i] = false;
         }
+
+        if (isOnePlayerGame) {
+            switchFirstMove.setEnabled(true);
+            comMove();
+
+        }
+        else {
+            switchFirstMove.setEnabled(false);
+        }
     }
 
-    private void markMoveOnBoard(int btnIndex, String mark){
+    private void markMoveOnBoard(int btnIndex, String mark) {
         btn[btnIndex].setText(mark);
         btn[btnIndex].setEnabled(false);
         marked[btnIndex] = true;
@@ -112,20 +168,38 @@ class TicTacToe implements ActionListener {
         if (e.getSource() == onePlayer || e.getSource() == twoPlayer) {
             // Change the jpanel to game board
             jFrame.remove(jPanelHome);
-            jFrame.add(jPanelGameBoard);
+            jFrame.add(jPanelGameBoard, BorderLayout.CENTER);
+            jFrame.add(optionsPanel, BorderLayout.SOUTH);
+            jFrame.invalidate();
             jFrame.validate();
+            jFrame.repaint();
+            isFirstMovePlayer1 = true;
 
             if (e.getSource() == onePlayer) {
                 isOnePlayerGame = true;
-                isPlayer1Move = true;
             } else if (e.getSource() == twoPlayer) {
                 isOnePlayerGame = false;
-                isPlayer1Move = true;
             }
+            resetBoard();
+
+
+        } else if (e.getSource() == homeBtn) {
+            jFrame.remove(jPanelGameBoard);
+            jFrame.remove(optionsPanel);
+            jFrame.add(jPanelHome, BorderLayout.CENTER);
+            jFrame.invalidate();
+            jFrame.validate();
+            jFrame.repaint();
+
+        } else if (e.getSource() == resetBtn) {
+            resetBoard();
+
+        } else if (e.getSource() == switchFirstMove) {
+
+            isFirstMovePlayer1 = !isFirstMovePlayer1;
+            resetBoard();
 
         } else {
-            boolean isWon;
-            int btnIndex;
             if (isPlayer1Move) {
                 int i = 0;
                 while (!(e.getSource() == btn[i] && !marked[i] && i < 9)) {
@@ -157,6 +231,7 @@ class TicTacToe implements ActionListener {
 
                 int i = 0;
                 while (!(e.getSource() == btn[i] && !marked[i] && i < 9)) {
+//                while (!(e.getSource() == btn[i] && !marked[i]) && i < 9) {
                     i++;
                 }
                 btnIndex = i;
@@ -177,31 +252,9 @@ class TicTacToe implements ActionListener {
                 }
 
             }
-            if (!isPlayer1Move && isOnePlayerGame) {
-
-                // computer's turn
-                do {
-                    btnIndex = rand.nextInt(9);
-                } while (marked[btnIndex]);
-
-                markMoveOnBoard(btnIndex, "X");
-
-                //check if the computer won
-                isWon = ifPlayerWon("X");
-
-                if (isWon) {
-                    //pop-up, Computer won
-                    JOptionPane.showMessageDialog(jFrame, "Computer won!");
-                    resetBoard();
-                } else if (move == 9) {
-                    //end of the game; draw
-                    JOptionPane.showMessageDialog(jFrame, "Draw!");
-                    resetBoard();
-                } else {
-                    isPlayer1Move = true;
-                }
-            }
+            comMove();
         }
+
     }
 }
 
